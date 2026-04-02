@@ -48,19 +48,26 @@ int main(int argc,char** argv){
     //Jacobi
     for (n = 0; n < STEPS; n++){
         //down to up
-        if (myid < 3){
-            MPI_Recv(&a[MS + 1][0], TS, MPI_DOUBLE, myid - 1, 10, MPI_COMM_WORLD, &status);
+        if (myid == 0){
+            MPI_Recv(&a[MS + 1][0], TS, MPI_DOUBLE, 1, 10, MPI_COMM_WORLD, &status);
         }
-        if (myid > 0){
-            MPI_Send(&a[1][0], TS, MPI_DOUBLE, myid + 1, 10, MPI_COMM_WORLD);
+        else if (myid == 3){
+            MPI_Send(&a[1][0], TS, MPI_DOUBLE, 2, 10, MPI_COMM_WORLD);
+        }
+        else{
+            MPI_Sendrecv(&a[1][0],TS,MPI_DOUBLE,myid-1,10,
+                &a[MS+1][0],10,MPI_DOUBLE,myid,10,MPI_COMM_WORLD,&status);
         }
 
         //up to down
-        if (myid > 0){
-            MPI_Recv(&a[0][0], TS, MPI_DOUBLE, myid + 1, 10, MPI_COMM_WORLD, &status);
+        if (myid == 3){
+            MPI_Recv(&a[0][0], TS, MPI_DOUBLE, 2, 10, MPI_COMM_WORLD, &status);
         }
-        if (myid < 3){
-            MPI_Send(&a[MS][0], TS, MPI_DOUBLE, myid - 1, 10, MPI_COMM_WORLD);
+        else if (myid == 0){
+            MPI_Send(&a[MS][0], TS, MPI_DOUBLE, 1, 10, MPI_COMM_WORLD);
+        }else{
+            MPI_Sendrecv(&a[MS][0],TS,MPI_DOUBLE,myid+1,10,
+            &a[0][0],TS,MPI_DOUBLE,myid,10,MPI_COMM_WORLD,&status);
         }
 
         //caculation range
