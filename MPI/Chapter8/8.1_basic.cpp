@@ -49,18 +49,18 @@ int main(int argc,char** argv){
     for (n = 0; n < STEPS; n++){
         //down to up
         if (myid < 3){
-            MPI_Recv(&a[MS + 1][0], TS, MPI_DOUBLE, myid - 1, 10, MPI_COMM_WORLD, &status);
+            MPI_Recv(&a[MS + 1][0], TS, MPI_DOUBLE, myid + 1, 10, MPI_COMM_WORLD, &status);
         }
         if (myid > 0){
-            MPI_Send(&a[1][0], TS, MPI_DOUBLE, myid + 1, 10, MPI_COMM_WORLD);
+            MPI_Send(&a[1][0], TS, MPI_DOUBLE, myid - 1, 10, MPI_COMM_WORLD);
         }
 
         //up to down
         if (myid > 0){
-            MPI_Recv(&a[0][0], TS, MPI_DOUBLE, myid + 1, 10, MPI_COMM_WORLD, &status);
+            MPI_Recv(&a[0][0], TS, MPI_DOUBLE, myid - 1, 10, MPI_COMM_WORLD, &status);
         }
         if (myid < 3){
-            MPI_Send(&a[MS][0], TS, MPI_DOUBLE, myid - 1, 10, MPI_COMM_WORLD);
+            MPI_Send(&a[MS][0], TS, MPI_DOUBLE, myid + 1, 10, MPI_COMM_WORLD);
         }
 
         //caculation range
@@ -85,15 +85,18 @@ int main(int argc,char** argv){
                 a[i][j] = b[i][j];
             }
         }
+    }
 
         //output
         cout << "Process " << myid << ":\n";
         for (i = 1; i <= MS; i++){
-            for (j = 0; j < TS; j++){
-                cout << "a[i][j] = " << a[i][j] << endl;
+            cout << "\n";
+            for (j = 0; j < TS; j++)
+            {
+                cout << "a[" << i << "][" << j << "] = " << a[i][j] << "\t";
             }
         }
-    }
+    
 
         MPI_Finalize();
     return 0;
