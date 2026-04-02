@@ -21,6 +21,8 @@ int main(int argc,char** argv){
 
     cout<<"Process "<<myid<<" of "<<numprocs<<" is alive!"<<endl;
 
+    MPI_Barrier(MPI_COMM_WORLD);
+
     //Initialization
     for (i = 0; i < MS + 2; i++){
         for (j = 0; j < TS; j++){
@@ -86,14 +88,15 @@ int main(int argc,char** argv){
             }
         }
     }
+    MPI_Barrier(MPI_COMM_WORLD);
+    
         //output
         cout << "Process " << myid << ":\n";
         for (i = 1; i <= MS; i++){
-            cout << "\n";
             for (j = 0; j < TS; j++)
             {
                 cout << "a[" << i << "][" << j << "] = " << a[i][j] << "\t";
-            }
+            }cout<<"\n"<<endl;
         }
     
 
