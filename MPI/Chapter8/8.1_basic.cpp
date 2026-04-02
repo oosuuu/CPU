@@ -48,11 +48,11 @@ int main(int argc,char** argv){
     //Jacobi
     for (n = 0; n < STEPS; n++){
         //down to up
+        if (myid > 0){
+            MPI_Send(&a[0][0], TS, MPI_DOUBLE, myid - 1, 10, MPI_COMM_WORLD);
+        }
         if (myid < 3){
             MPI_Recv(&a[MS + 1][0], TS, MPI_DOUBLE, myid + 1, 10, MPI_COMM_WORLD, &status);
-        }
-        if (myid > 0){
-            MPI_Send(&a[1][0], TS, MPI_DOUBLE, myid - 1, 10, MPI_COMM_WORLD);
         }
 
         //up to down
@@ -65,13 +65,13 @@ int main(int argc,char** argv){
 
         //caculation range
         begin_row = 1;
-        end_row = 4;
+        end_row = MS + 1;
 
         if (myid == 0){
             begin_row = 2;
         }
         if (myid == 3){
-            end_row = 3;
+            end_row = MS;
         }
 
         //update
@@ -86,7 +86,6 @@ int main(int argc,char** argv){
             }
         }
     }
-
         //output
         cout << "Process " << myid << ":\n";
         for (i = 1; i <= MS; i++){
