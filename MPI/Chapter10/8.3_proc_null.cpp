@@ -10,6 +10,7 @@ int main(int argc,char** argv){
 
     int myid,numprocs,i,j,n;
     int begin_row,end_row;
+    int left,right,tag1,tag2;
     MPI_Status status;
 
     double a[MS + 2][TS];
@@ -48,30 +49,37 @@ int main(int argc,char** argv){
     //Jacobi
     for (n = 0; n < STEPS; n++){
         //down to up
-        if (myid > 0){
-            MPI_Send(&a[1][0], TS, MPI_DOUBLE, myid - 1, 10, MPI_COMM_WORLD);
+        if (myid == 0){
+            MPI_Recv(&a[MS + 1][0], TS, MPI_DOUBLE, 1, 10, MPI_COMM_WORLD, &status);
         }
-        if (myid < 3){
-            MPI_Recv(&a[MS + 1][0], TS, MPI_DOUBLE, myid + 1, 10, MPI_COMM_WORLD, &status);
+        else if (myid == 3){
+            MPI_Send(&a[1][0], TS, MPI_DOUBLE, 2, 10, MPI_COMM_WORLD);
+        }
+        else{
+            MPI_Sendrecv(&a[1][0],TS,MPI_DOUBLE,myid-1,10,
+                &a[MS+1][0],10,MPI_DOUBLE,myid,10,MPI_COMM_WORLD,&status);
         }
 
         //up to down
-        if (myid > 0){
-            MPI_Recv(&a[0][0], TS, MPI_DOUBLE, myid - 1, 10, MPI_COMM_WORLD, &status);
+        if (myid == 3){
+            MPI_Recv(&a[0][0], TS, MPI_DOUBLE, 2, 10, MPI_COMM_WORLD, &status);
         }
-        if (myid < 3){
-            MPI_Send(&a[MS][0], TS, MPI_DOUBLE, myid + 1, 10, MPI_COMM_WORLD);
+        else if (myid == 0){
+            MPI_Send(&a[MS][0], TS, MPI_DOUBLE, 1, 10, MPI_COMM_WORLD);
+        }else{
+            MPI_Sendrecv(&a[MS][0],TS,MPI_DOUBLE,myid+1,10,
+            &a[0][0],TS,MPI_DOUBLE,myid,10,MPI_COMM_WORLD,&status);
         }
 
         //caculation range
         begin_row = 1;
-        end_row = MS + 1;
+        end_row = 4;
 
         if (myid == 0){
             begin_row = 2;
         }
         if (myid == 3){
-            end_row = MS;
+            end_row = 3;
         }
 
         //update
@@ -85,17 +93,15 @@ int main(int argc,char** argv){
                 a[i][j] = b[i][j];
             }
         }
-    }
+
         //output
         cout << "Process " << myid << ":\n";
         for (i = 1; i <= MS; i++){
-            cout << "\n";
-            for (j = 0; j < TS; j++)
-            {
-                cout << "a[" << i << "][" << j << "] = " << a[i][j] << "\t";
+            for (j = 0; j < TS; j++){
+                cout << "a[i][j] = " << a[i][j] << endl;
             }
         }
-    
+    }
 
         MPI_Finalize();
     return 0;
