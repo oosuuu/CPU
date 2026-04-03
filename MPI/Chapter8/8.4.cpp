@@ -39,7 +39,7 @@ int main(int argc,char** argv){
 
         // 将矩阵A各行发送给从进程
         for (i = 0; i < min(numprocs - 1, rows); i++){
-            MPI_Send(&a[i][0], cols, MPI_DOUBLE, i, i, MPI_COMM_WORLD);
+            MPI_Send(&a[i][0], cols, MPI_DOUBLE, i+1, i, MPI_COMM_WORLD);
             numsent++;
         }
 
@@ -55,7 +55,7 @@ int main(int argc,char** argv){
                 MPI_Send(&a[numsent][0], cols, MPI_DOUBLE, sender, numsent, MPI_COMM_WORLD);
                 numsent++;
             }else{
-                MPI_Send(buf, 0, MPI_DOUBLE, sender, 0, MPI_COMM_WORLD);
+                MPI_Send(NULL, 0, MPI_DOUBLE, sender, 0, MPI_COMM_WORLD);
             }
         }
     }
@@ -68,11 +68,13 @@ int main(int argc,char** argv){
 
             //接受A的某行
             MPI_Recv(buf, cols, MPI_DOUBLE, master, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+            
+            if (status.MPI_TAG == 0){
+                break;}
+
             row = status.MPI_TAG;
             ans = 0.0;
     
-            if (status.MPI_TAG == 0){
-                break;}
 
             // 计算点积
             for (i = 0; i < cols; i++){
