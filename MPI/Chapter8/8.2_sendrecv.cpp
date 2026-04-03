@@ -21,6 +21,8 @@ int main(int argc,char** argv){
 
     cout<<"Process "<<myid<<" of "<<numprocs<<" is alive!"<<endl;
 
+    MPI_Barrier(MPI_COMM_WORLD);
+
     //Initialization
     for (i = 0; i < MS + 2; i++){
         for (j = 0; j < TS; j++){
@@ -55,10 +57,10 @@ int main(int argc,char** argv){
             MPI_Send(&a[1][0], TS, MPI_DOUBLE, 2, 10, MPI_COMM_WORLD);
         }
         else{
-            MPI_Sendrecv(&a[1][0],TS,MPI_DOUBLE,myid-1,10,
-                &a[MS+1][0],10,MPI_DOUBLE,myid,10,MPI_COMM_WORLD,&status);
+            MPI_Sendrecv(&a[1][0], TS, MPI_DOUBLE, myid - 1, 10,
+                         &a[MS + 1][0], TS, MPI_DOUBLE, myid + 1, 10, MPI_COMM_WORLD, &status);
         }
-
+    
         //up to down
         if (myid == 3){
             MPI_Recv(&a[0][0], TS, MPI_DOUBLE, 2, 10, MPI_COMM_WORLD, &status);
@@ -67,20 +69,20 @@ int main(int argc,char** argv){
             MPI_Send(&a[MS][0], TS, MPI_DOUBLE, 1, 10, MPI_COMM_WORLD);
         }else{
             MPI_Sendrecv(&a[MS][0],TS,MPI_DOUBLE,myid+1,10,
-            &a[0][0],TS,MPI_DOUBLE,myid,10,MPI_COMM_WORLD,&status);
+            &a[0][0],TS,MPI_DOUBLE,myid-1,10,MPI_COMM_WORLD,&status);
         }
-
+    
         //caculation range
         begin_row = 1;
-        end_row = 4;
+        end_row = MS + 1;        ;
 
         if (myid == 0){
             begin_row = 2;
         }
         if (myid == 3){
-            end_row = 3;
+            end_row = MS;
         }
-
+    
         //update
         for (i = begin_row; i < end_row; i++){
             for (j = 1; j < TS - 1; j++){
@@ -92,16 +94,20 @@ int main(int argc,char** argv){
                 a[i][j] = b[i][j];
             }
         }
-
-        //output
-        cout << "Process " << myid << ":\n";
-        for (i = 1; i <= MS; i++){
-            for (j = 0; j < TS; j++){
-                cout << "a[i][j] = " << a[i][j] << endl;
-            }
-        }
     }
+    MPI_Barrier(MPI_COMM_WORLD);
 
-        MPI_Finalize();
+    //output
+    cout << "Process " << myid << ":\n";
+    for (i = 1; i <= MS; i++){
+        for (j = 0; j < TS; j++)
+        {
+            cout << "a[" << i << "][" << j << "] = " << a[i][j] << "\t";
+        }cout<<"\n"<<endl;
+    }
+    MPI_Barrier(MPI_COMM_WORLD);
+    cout << "LOOK AT HERE! n = " <<n<< endl;
+
+    MPI_Finalize();
     return 0;
 }

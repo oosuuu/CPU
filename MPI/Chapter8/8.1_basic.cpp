@@ -51,7 +51,7 @@ int main(int argc,char** argv){
     for (n = 0; n < STEPS; n++){
         //down to up
         if (myid > 0){
-            MPI_Send(&a[0][0], TS, MPI_DOUBLE, myid - 1, 10, MPI_COMM_WORLD);
+            MPI_Send(&a[1][0], TS, MPI_DOUBLE, myid - 1, 10, MPI_COMM_WORLD);
         }
         if (myid < 3){
             MPI_Recv(&a[MS + 1][0], TS, MPI_DOUBLE, myid + 1, 10, MPI_COMM_WORLD, &status);
