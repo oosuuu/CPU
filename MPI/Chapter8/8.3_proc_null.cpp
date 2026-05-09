@@ -1,4 +1,5 @@
 #include <mpi.h>
+#include <iomanip>
 #include <iostream>
 using namespace std;
 
@@ -13,14 +14,14 @@ int main(int argc,char** argv){
     int up,down,tag1,tag2;
     MPI_Status status;
 
-    double a[MS + 2][TS];
-    double b[MS + 2][TS];
+    double a[MS+2][TS];
+    double b[MS+2][TS];
 
     MPI_Init(&argc,&argv);
     MPI_Comm_size(MPI_COMM_WORLD,&numprocs);
     MPI_Comm_rank(MPI_COMM_WORLD,&myid);
 
-    cout<<"Process "<<myid<<" of "<<numprocs<<" is alive!"<<endl;
+    //cout<<"Process "<<myid<<" of "<<numprocs<<" is alive!"<<endl;
 
     //Initialization
     for (i = 0; i < MS + 2; i++){
@@ -29,25 +30,32 @@ int main(int argc,char** argv){
         }
     }
 
-    if (myid == 0){
-        for (j = 0; j < TS; j++){
-            a[1][j] = 8.0;         //row 1
-        }
+    for (j = 0; j < TS; j++){
+        a[0][j] = 8.0;
+        a[MS + 1][j] = 8.0;
     }
 
+    for (i = 0; i < MS + 2; i++)
+    {
+        a[i][0] = 8.0;
+        a[i][TS - 1] = 8.0;
+    }
+
+    if (myid == 0){
+        for (j = 0; j < TS; j++)
+        {
+            a[1][j] = 8.0; // row 1
+        }
+    }
     if (myid == 3){
         for (j = 0; j < TS; j++){
             a[MS][j] = 8.0;       //row 4
         }
     }
 
-    for (j = 0; j < TS; j++){
-        a[0][j] = 8.0;
-        a[MS + 1][j] = 8.0;
-    }
-
     tag1=3;
     tag2=4;
+
     //set rank
     if(myid==0){
         up=MPI_PROC_NULL;
@@ -72,22 +80,22 @@ int main(int argc,char** argv){
 
         //caculation range
         begin_row = 1;
-        end_row = MS + 1;
+        end_row = MS;
 
         if (myid == 0){
             begin_row = 2;
         }
         if (myid == 3){
-            end_row = MS;
+            end_row = MS-1;
         }
 
         //update
-        for (i = begin_row; i < end_row; i++){
+        for (i = begin_row; i < end_row+1; i++){
             for (j = 1; j < TS - 1; j++){
                 b[i][j] = (a[i][j + 1] + a[i][j - 1] + a[i + 1][j] + a[i - 1][j]) / 4.0;
             }
         }
-        for (i = begin_row; i < end_row; i++){
+        for (i = begin_row; i < end_row+1; i++){
             for (j = 1; j < TS - 1; j++){
                 a[i][j] = b[i][j];
             }
@@ -95,14 +103,20 @@ int main(int argc,char** argv){
     }
 
     //output
-    cout << "Process " << myid << ":\n";
-    for (i = 1; i <= MS; i++){
-        for (j = 0; j < TS; j++)
-        {
-            cout << "a[" << i << "][" << j << "] = " << a[i][j] << "\t";
-        }cout<<"\n"<<endl;
+    for (int k = 0; k < 4; k++){
+        if(myid==k){
+            for (i = 1; i < MS + 1; i++)
+            {
+                for (j = 0; j < TS; j++)
+                {
+                    cout << a[i][j] << "\t";
+                }
+                cout << "\n"
+                     << endl;
+            }
+        }
+        MPI_Barrier(MPI_COMM_WORLD);
     }
-
 
         MPI_Finalize();
     return 0;

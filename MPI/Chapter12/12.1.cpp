@@ -11,25 +11,27 @@ int main(int argc,char** argv){
     int myid,numprocs,i,j,n;
     int begin_row,end_row;
     int up,down,tag1,tag2;
+    double st1, et1, st2, et2;
     MPI_Status status[4];
     MPI_Request req[4];
 
-    double a[MS + 2][TS];
-    double b[MS + 2][TS];
+    double a[MS+2][TS];
+    double b[MS+2][TS];
 
     MPI_Init(&argc,&argv);
     MPI_Comm_size(MPI_COMM_WORLD,&numprocs);
     MPI_Comm_rank(MPI_COMM_WORLD,&myid);
 
-    cout<<"Process "<<myid<<" of "<<numprocs<<" is alive!"<<endl;
+    //cout<<"Process "<<myid<<" of "<<numprocs<<" is alive!"<<endl;
   
     // Initialization
+    st1 = MPI_Wtime();
     for (i = 0; i < MS + 2; i++){
         for (j = 0; j < TS; j++){
             a[i][j] = 0.0;
         }
     }
-    //Boundary    
+
     for (j = 0; j < TS; j++){
         a[0][j] = 8.0;
         a[MS + 1][j] = 8.0;
@@ -52,30 +54,21 @@ int main(int argc,char** argv){
             a[MS][j] = 8.0;       //row 4
         }
     }
+    et1 = MPI_Wtime();
 
-    //for (i = 0; i < MS + 2;i++){
-    //    for (j = 0; j < TS;j++){
-    //        cout << a[i][j] << "\t";
-    //    }
-    //    cout << "\n"
-    //         << endl;
-    //}
-    
     tag1 = 3;
     tag2 = 4;
 
     //set rank
     if (myid == 0){
         up = MPI_PROC_NULL;
-    }
-    else{
+    }else{
         up = myid - 1;
     }
     
     if (myid == 3){
         down = MPI_PROC_NULL;
-    }
-    else{
+    }else{
         down = myid + 1;
     }
 
@@ -90,7 +83,9 @@ int main(int argc,char** argv){
     }
 
 //Jacobi
-    for (n = 0; n < STEPS; n++){
+    st2 = MPI_Wtime();
+    for (n = 0; n < STEPS; n++)
+    {
         //caculate boudary
         for (j = 1; j < TS - 1; j++){
             b[begin_row][j] = (a[begin_row][j + 1] + a[begin_row][j - 1] + a[begin_row + 1][j] + a[begin_row - 1][j]) * 0.25;
@@ -122,18 +117,30 @@ int main(int argc,char** argv){
             MPI_Wait(&req[i], &status[i]);
         }
     }
-    
+    et2 = MPI_Wtime();
+
     // print
-    cout << "Process " << myid << ":" << endl;
-   for (i = 1; i < MS + 1; i++)
-    {
-        for (j = 0; j < TS;j++){
-            cout << a[i][j] << "\t";
+    for (int k = 0; k < 4; k++){
+        if(myid==k){
+            for (i = 1; i < MS + 1; i++)
+            {
+                for (j = 0; j < TS; j++)
+                {
+                    cout << a[i][j] << "\t";
+                }
+                cout << "\n"
+                     << endl;
+            }
         }
-        cout << "\n"
-             << endl;
+        MPI_Barrier(MPI_COMM_WORLD);
     }
 
-        MPI_Finalize();
+    //for (i = 0; i < 4; i++)
+    //{
+    //    if(myid==i){
+    //       cout <<i<<"\t"<<  et1 - st1 <<"\t"<<et2 - st2<< endl;
+    //    }
+    //}
+    MPI_Finalize();
 
 }

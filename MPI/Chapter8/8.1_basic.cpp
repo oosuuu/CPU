@@ -1,5 +1,6 @@
 #include <mpi.h>
 #include <iostream>
+#include <iomanip>
 using namespace std;
 
 #define TS 16      //totalsize
@@ -8,7 +9,7 @@ using namespace std;
 
 int main(int argc,char** argv){
 
-    int myid,numprocs,i,j,n;
+    int myid,numprocs,i,j,n,k;
     int begin_row,end_row;
     MPI_Status status;
 
@@ -28,6 +29,12 @@ int main(int argc,char** argv){
         for (j = 0; j < TS; j++){
             a[i][j] = 0.0;
         }
+    }
+
+     for (i = 0; i < MS + 2; i++)
+    {
+        a[i][0] = 8.0;
+        a[i][TS - 1] = 8.0;
     }
 
     if (myid == 0){
@@ -90,15 +97,22 @@ int main(int argc,char** argv){
     }
     MPI_Barrier(MPI_COMM_WORLD);
     
-        //output
-        cout << "Process " << myid << ":\n";
-        for (i = 1; i <= MS; i++){
-            for (j = 0; j < TS; j++)
+    //output
+
+    for (k = 0; k < 4;k++){
+        if(myid==k){
+            for (i = 1; i <= MS; i++)
             {
-                cout << "a[" << i << "][" << j << "] = " << a[i][j] << "\t";
-            }cout<<"\n"<<endl;
+                for (j = 0; j < TS; j++)
+                {
+                    cout << left << setw(10) << a[i][j];
+                }
+                cout << "\n"
+                     << endl;
+            }
         }
-    
+        MPI_Barrier(MPI_COMM_WORLD);
+    }
 
         MPI_Finalize();
     return 0;
